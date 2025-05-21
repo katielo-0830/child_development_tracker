@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/usr/src/app
+    environment:
+      NODE_ENV: ${NODE_ENV} # Use the variable from .env
+      DB_HOST: db # Service name of the MySQL container
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+      DB_DIALECT: mysql # Or your specific dialect
+    command: sh -c "DEBUG=:child-development-tracker-backend* npm start"
+    depends_on: # Ensure db starts before backend
+      - db
+
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  app-data:
+  db-data:
