@@ -37,9 +37,52 @@ router.post('/', async (req, res) => {
   }
 });
 
-// You can add other therapist-related routes here (GET, PUT, DELETE)
+/**
+ * @route   GET /api/therapists
+ * @desc    Get all therapists
+ * @access  Public // Or protected, depending on your auth setup
+ */
+router.get('/', async (req, res) => {
+  try {
+    const therapists = await db.Therapist.findAll({
+      order: [['name', 'ASC']] // Optional: Order by name
+    });
+    res.json(therapists);
+  } catch (err) {
+    console.error('Error getting therapists:', err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+/**
+ * @route   GET /api/therapists/:id
+ * @desc    Get a specific therapist by ID
+ * @access  Public // Or protected, depending on your auth setup
+ */
+router.get('/:id', async (req, res) => {
+  try {
+    const therapistId = parseInt(req.params.id, 10);
+
+    // Check if therapistId is a valid number
+    if (isNaN(therapistId)) {
+      return res.status(400).json({ msg: 'Invalid therapist ID format.' });
+    }
+
+    const therapist = await db.Therapist.findByPk(therapistId);
+
+    if (!therapist) {
+      return res.status(404).json({ msg: 'Therapist not found.' });
+    }
+
+    res.json(therapist);
+  } catch (err) {
+    console.error('Error getting therapist by ID:', err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// You can add other therapist-related routes here (PUT, DELETE)
 // For example:
-// router.get('/', async (req, res) => { ... }); // Get all therapists
-// router.get('/:id', async (req, res) => { ... }); // Get therapist by ID
+// router.put('/:id', async (req, res) => { ... }); // Update therapist by ID
 
 module.exports = router;
