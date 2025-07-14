@@ -14,7 +14,8 @@ module.exports = (sequelize, DataTypes) => {
       Session.belongsToMany(models.Therapist, {
         through: 'SessionTherapists',
         foreignKey: 'sessionId',
-        otherKey: 'therapistId'
+        otherKey: 'therapistId',
+        as: 'therapists' // Change alias to lowercase "therapists"
       });
     }
   }

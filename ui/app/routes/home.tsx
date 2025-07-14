@@ -1,13 +1,14 @@
 import type { Route } from "./+types/home";
-import { Welcome } from "../welcome/welcome";
+import { Therapists } from "../components/therapists"; // Adjust path if necessary
+import { Dashboard } from "../components/dashboard"; // Adjust path if necessary
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
+    { title: "Therapists - Child Development Tracker" }, // Updated title
+    { name: "description", content: "View and manage therapists." }, // Updated description
   ];
 }
 
 export default function Home() {
-  return <Welcome />;
+  return <Dashboard />;
 }

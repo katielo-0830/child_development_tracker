@@ -6,9 +6,28 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline"; // For baseline styling
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import Box from "@mui/material/Box";
+import SideMenu from "./routes/root/side_menu"; // Import the SideMenu component
+
+
+/*
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#1976d2", // Example primary color
+    },
+    secondary: {
+      main: "#dc004e", // Example secondary color
+    },
+  },
+});
+*/
+const theme = createTheme();
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -42,7 +61,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ display: "flex" }}>
+        {/* Side Menu */}
+        <SideMenu />
+        {/* Main Content */}
+        <Box sx={{ flexGrow: 1, padding: "16px" }}>
+          <Outlet />
+        </Box>
+      </Box>
+    </ThemeProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
