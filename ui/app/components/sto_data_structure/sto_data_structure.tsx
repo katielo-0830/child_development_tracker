@@ -4,9 +4,10 @@ import STOTarget from "./sto_target";
 
 interface Target {
   target: string;
-  type: "count" | "response" | null;
+  type: "count" | "response" | "steps" | null;
   id: string;
   layer?: Target[];
+  steps?: string[];
 }
 
 interface STODataStructureProps {
@@ -133,6 +134,7 @@ export default function STODataStructure({ defaultTargets=[{target: "", id: "1",
           }}
           isFirst={location[location.length - 1] === 0}
           hasLayer={!!(target.layer && target.layer.length > 0)}
+          canDelete={location.length === 1 ? localTargets.length > 1 : true}
         />
         {(
           target.layer && target.layer.length > 0 && target.layer.map((layerTarget, layerIndex) => 

@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
-import DeleteIcon from "@mui/icons-material/Delete";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import STOSteps from "./sto_steps";
 import { type Target } from "./sto_data_structure";
 
 interface STOTargetProps {
@@ -14,13 +15,24 @@ interface STOTargetProps {
   onChange: (updatedTarget: Target) => void;
   onAddTarget: () => void;
   onAddLayer: () => void;
-  onDelete: () => void;  // New prop for delete functionality
-  isFirst: boolean;  // New prop to determine if this is the first target in a layer
+  onDelete: () => void;
+  isFirst: boolean;
   hasLayer: boolean;
+  canDelete: boolean;
 }
 
-export default function STOTarget({ target, location, onChange, onAddTarget, onAddLayer, onDelete, isFirst = true, hasLayer = false }: STOTargetProps) {
+export default function STOTarget({ target, location, onChange, onAddTarget, onAddLayer, onDelete, isFirst = true, hasLayer = false, canDelete = true }: STOTargetProps) {
   const [localTarget, setLocalTarget] = useState<Target>(target);
+  const [steps, setSteps] = useState<string[]>([]);
+
+  // Initialize steps from target data if it exists
+  useEffect(() => {
+    if (target.steps) {
+      setSteps(target.steps);
+    } else {
+      setSteps(['']);
+    }
+  }, [target.steps]);
 
   const handleTargetChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const updatedTarget = { ...target, target: event.target.value };
@@ -29,7 +41,22 @@ export default function STOTarget({ target, location, onChange, onAddTarget, onA
   };
 
   const handleTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const updatedTarget = { ...localTarget, type: event.target.value as "count" | "response" | null };
+    const newType = event.target.value as "count" | "response" | "steps" | null;
+    const updatedTarget = { ...localTarget, type: newType };
+    
+    // Clear steps data if type is changed from 'steps' to something else
+    if (localTarget.type === 'steps' && newType !== 'steps') {
+      const { steps: _, ...targetWithoutSteps } = updatedTarget;
+      setLocalTarget(targetWithoutSteps as Target);
+      onChange?.(targetWithoutSteps as Target);
+    } else {
+      setLocalTarget(updatedTarget);
+      onChange?.(updatedTarget);
+    }
+  };
+
+  const handleStepsChange = (newSteps: string[]) => {
+    const updatedTarget = { ...localTarget, steps: newSteps };
     setLocalTarget(updatedTarget);
     onChange?.(updatedTarget);
   };
@@ -66,9 +93,16 @@ export default function STOTarget({ target, location, onChange, onAddTarget, onA
           onClick={onDelete}
           color="error"
           aria-label="delete target"
-          sx={{ flexShrink: 0 }}
+          disabled={!canDelete}
+          sx={{ 
+            flexShrink: 0,
+            opacity: canDelete ? 1 : 0.5,
+            '&:hover': {
+              backgroundColor: canDelete ? 'rgba(211, 47, 47, 0.04)' : 'transparent',
+            }
+          }}
         >
-          <DeleteIcon />
+          <DeleteOutlineIcon />
         </IconButton>
       </Stack>
       { !hasLayer && (
@@ -83,7 +117,17 @@ export default function STOTarget({ target, location, onChange, onAddTarget, onA
       >
         <MenuItem value="count">Count</MenuItem>
         <MenuItem value="response">Response</MenuItem>
+        <MenuItem value="steps">Steps</MenuItem>
       </TextField>
+      )}
+      {!hasLayer && localTarget.type === 'steps' && (
+        <Box sx={{ mb: 2 }}>
+          <STOSteps 
+            value={steps} 
+            onChange={handleStepsChange} 
+            label={localTarget.target ? `${localTarget.target} Steps` : 'Steps'}
+          />
+        </Box>
       )}
     </Box>
   );

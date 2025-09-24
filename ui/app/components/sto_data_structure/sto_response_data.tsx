@@ -18,12 +18,14 @@ interface STOResponseDataProps {
   label?: string;
   initialCounts?: ResponseCounts;
   onCountChange?: (counts: ResponseCounts, responseSequence: ResponseType[]) => void;
+  onRemove?: () => void;
 }
 
 const STOResponseData: React.FC<STOResponseDataProps> = ({
   label = 'Response Counter',
   initialCounts = { plus: 0, minus: 0, vp: 0, pp: 0, p: 0 },
   onCountChange,
+  onRemove,
 }) => {
   const [expanded, setExpanded] = useState(true);
   
@@ -124,21 +126,39 @@ const STOResponseData: React.FC<STOResponseDataProps> = ({
   return (
     <Box sx={{ border: '1px solid #eee', borderRadius: 1, p: 2 }}>
       <Box 
-        onClick={toggleExpand} 
         sx={{ 
           display: 'flex', 
           alignItems: 'center', 
-          cursor: 'pointer',
+          justifyContent: 'space-between',
           mb: expanded ? 2 : 0,
-          '&:hover': { opacity: 0.8 }
         }}
       >
-        <IconButton size="small" sx={{ mr: 1 }}>
-          {expanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-        </IconButton>
-        <Typography variant="subtitle1" sx={{ color: '#424242', fontWeight: 500 }}>
-          {label}
-        </Typography>
+        <Box 
+          onClick={toggleExpand} 
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            cursor: 'pointer',
+            flexGrow: 1,
+            '&:hover': { opacity: 0.8 }
+          }}
+        >
+          <IconButton size="small" sx={{ mr: 1 }}>
+            {expanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+          </IconButton>
+          <Typography variant="subtitle1" sx={{ color: '#424242', fontWeight: 500 }}>
+            {label}
+          </Typography>
+        </Box>
+        {onRemove && (
+          <IconButton 
+            size="small" 
+            onClick={onRemove}
+            sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
+          >
+            <DeleteOutlineIcon />
+          </IconButton>
+        )}
       </Box>
       
       <Collapse in={expanded} timeout="auto" unmountOnExit>

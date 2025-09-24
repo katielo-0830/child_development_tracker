@@ -10,8 +10,11 @@ import {
   Divider,
   styled,
   TextField,
-  Autocomplete
+  Autocomplete,
+  Button,
+  MenuItem
 } from "@mui/material";
+import SessionProgram from './SessionProgram';
 
 // Define interfaces for our data models
 interface STO {
@@ -23,10 +26,24 @@ interface STO {
   updatedAt: string;
 }
 
+interface STO {
+  id: number;
+  name: string;
+  description?: string;
+  status: 'in_progress' | 'mastered' | 'pending';
+  startDate?: string;
+  masteredDate?: string;
+  programId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface Program {
   id: number;
   name: string;
   description?: string;
+  status: 'running' | 'pending' | 'done';
+  stos?: STO[];
   createdAt: string;
   updatedAt: string;
 }
@@ -110,44 +127,39 @@ export async function clientLoader({ params }: { params: { id: string } }) {
 
 export default function SessionPage() {
   const { session, programs } = useLoaderData() as { session: Session; programs: Program[] };
-  const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
-  const [stos, setStos] = useState<STO[]>([]);
-  const [selectedSTO, setSelectedSTO] = useState<STO | null>(null);
-  const [loadingSTOs, setLoadingSTOs] = useState(false);
-  const [stoError, setStoError] = useState<string | null>(null);
-  const [responseCounts, setResponseCounts] = useState<ResponseCounts>({
-    plus: 0,
-    minus: 0,
-    vp: 0,
-    pp: 0,
-    p: 0
-  });
-
-  const handleProgramChange = async (_: React.SyntheticEvent, newValue: Program | null) => {
-    setSelectedProgram(newValue);
-    setSelectedSTO(null); // Reset selected STO when program changes
-    
-    if (!newValue) {
-      setStos([]);
-      return;
+  const [programsInSession, setProgramsInSession] = useState<Program[]>([]);
+  const [allPrograms, setAllPrograms] = useState<Program[]>([]);
+  const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null);
+  
+  // Initialize programs from loader
+  useEffect(() => {
+    if (programs) {
+      setAllPrograms(programs);
     }
+  }, [programs]);
 
-    // Fetch STOs for the selected program
-    setLoadingSTOs(true);
-    setStoError(null);
-    try {
-      const response = await fetch(`/api/stos?programId=${newValue.id}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch STOs');
+  const handleProgramChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    const programId = Number(event.target.value);
+    setSelectedProgramId(programId);
+  };
+
+  const handleAddProgram = () => {
+    if (selectedProgramId) {
+      const programToAdd = allPrograms.find(p => p.id === selectedProgramId);
+      if (programToAdd && !programsInSession.some(p => p.id === programToAdd.id)) {
+        setProgramsInSession([...programsInSession, programToAdd]);
       }
-      const data = await response.json();
-      setStos(data);
-    } catch (err) {
-      console.error('Error fetching STOs:', err);
-      setStoError(err instanceof Error ? err.message : 'Failed to load STOs');
-    } finally {
-      setLoadingSTOs(false);
+      setSelectedProgramId(null);
     }
+  };
+
+  const handleRemoveProgram = (programId: number) => {
+    setProgramsInSession(programsInSession.filter(p => p.id !== programId));
+  };
+
+  const handleUpdateSTOData = (programId: number, stoId: number, data: any) => {
+    // In a real app, you would save this data to your backend
+    console.log(`Updating STO ${stoId} in program ${programId}:`, data);
   };
   
   // Format date and times for display
@@ -172,32 +184,13 @@ export default function SessionPage() {
     <Container maxWidth="md" sx={{ py: 4 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <Typography variant="h4" component="h1">
-            Session Details
+            Session - {format(new Date(session.date), 'EEEE, MMMM d, yyyy')} • {formattedStartTime}-{formattedEndTime} • {session.therapists?.map(t => t.name).join(', ')}
           </Typography>
         </Box>
         
         <Divider sx={{ mb: 3 }} />
         
         <Box sx={{ display: 'flex', flexWrap: 'wrap', margin: -2 }}>
-          <GridItem>
-            <Typography variant="subtitle1" color="textSecondary">Date</Typography>
-            <Typography variant="body1" paragraph>{formattedDate}</Typography>
-          </GridItem>
-
-          <GridItem>
-            <Typography variant="subtitle1" color="textSecondary">Time</Typography>
-            <Typography variant="body1" paragraph>
-              {formattedStartTime} - {formattedEndTime} ({durationInHours} hours)
-            </Typography>
-            {session.therapists?.length > 0 && (
-              <>
-                <Typography variant="subtitle1" color="textSecondary" sx={{ mt: 2 }}>Therapists</Typography>
-                <Typography variant="body1">
-                  {session.therapists.map(t => t.name).join(', ')}
-                </Typography>
-              </>
-            )}
-          </GridItem>
           
           {session.notes && (
             <NotesContainer>
@@ -209,72 +202,60 @@ export default function SessionPage() {
           )}
         </Box>
 
-        {/* Program Selection */}
+        {/* Programs in Session */}
         <Box sx={{ mt: 4, mb: 4, width: '100%' }}>
-          <Typography variant="h6" gutterBottom>
-            Enter data for program
-          </Typography>
-          <Autocomplete
-            options={programs}
-            getOptionLabel={(option: Program) => option.name}
-            value={selectedProgram}
-            onChange={handleProgramChange}
-            noOptionsText="No programs found"
-            isOptionEqualToValue={(option: Program, value: Program) => option.id === value.id}
-            renderInput={(params) => (
+          <Box display="flex" gap={2} sx={{ mb: 2}}>
+            <Box flexGrow={1}>
               <TextField
-                {...params}
-                label="Select a program"
-                variant="outlined"
-                placeholder="Search programs..."
-              />
-            )}
-            fullWidth
-          />
-          
-          {selectedProgram && (
-            <Box sx={{ mt: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Select a STO
-              </Typography>
-              <Box sx={{ mb: 3 }}>
-                <Autocomplete
-                  options={stos}
-                  getOptionLabel={(option: STO) => option.name}
-                  value={selectedSTO}
-                  onChange={(_: React.SyntheticEvent, newValue: STO | null) => setSelectedSTO(newValue)}
-                  loading={loadingSTOs}
-                  loadingText="Loading STOs..."
-                  noOptionsText={loadingSTOs ? 'Loading...' : 'No STOs found for this program'}
-                  isOptionEqualToValue={(option: STO, value: STO) => option.id === value.id}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Select a STO"
-                      variant="outlined"
-                      placeholder="Search STOs..."
-                      error={!!stoError}
-                      helperText={stoError}
-                    />
-                  )}
-                  fullWidth
+                fullWidth
+                select
+                size="small"
+                label="Select Program"
+                value={selectedProgramId || ''}
+                onChange={handleProgramChange}
+                disabled={allPrograms.length === 0 || allPrograms.every(p => programsInSession.some(added => added.id === p.id))}
+              >
+                <MenuItem value="" disabled>
+                  {allPrograms.every(p => programsInSession.some(added => added.id === p.id))
+                    ? 'All programs added' 
+                    : 'Select a program'}
+                </MenuItem>
+                {allPrograms
+                  .filter(program => !programsInSession.some(p => p.id === program.id))
+                  .map((program) => (
+                    <MenuItem key={program.id} value={program.id}>
+                      {program.name}
+                    </MenuItem>
+                  ))}
+              </TextField>
+            </Box>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleAddProgram}
+              disabled={!selectedProgramId || allPrograms.every(p => programsInSession.some(added => added.id === p.id))}
+            >
+              Add
+            </Button>
+          </Box>
+
+          {programsInSession.length === 0 ? (
+            <Typography variant="body1" color="textSecondary" sx={{ mt: 2, mb: 4, fontStyle: 'italic' }}>
+              Select a program from the dropdown to add it to this session.
+            </Typography>
+          ) : (
+            <Box sx={{ '& > *': { mb: 2 } }}>
+              {programsInSession.map((program) => (
+                <SessionProgram
+                  key={program.id}
+                  program={program}
+                  onRemoveProgram={handleRemoveProgram}
+                  onUpdateSTOData={handleUpdateSTOData}
                 />
-              </Box>
-              
-              {selectedSTO && (
-                <Box sx={{ mt: 3 }}>
-                  <STOResponseData 
-                    label={`${selectedSTO.name} Responses`}
-                    initialCounts={responseCounts}
-                    onCountChange={setResponseCounts}
-                  />
-                </Box>
-              )}
+              ))}
             </Box>
           )}
         </Box>
-
-        
     </Container>
   );
 }
