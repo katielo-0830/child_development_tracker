@@ -26,7 +26,7 @@ services:
       DB_PASSWORD: ${MYSQL_PASSWORD}
       DB_NAME: ${MYSQL_DATABASE}
       DB_DIALECT: mysql # Or your specific dialect
-    command: sh -c "DEBUG=:child-development-tracker-backend* npm start"
+    command: sh -c "DEBUG=:child-development-tracker-backend* npm $(if [ \"$$NODE_ENV\" = \"production\" ]; then echo start; else echo 'run dev'; fi)"
     depends_on: # Ensure db starts before backend
       - db
 
