@@ -1,7 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { Trail, STO, Session } = require('../sequelize/models');
-const { Op } = require('sequelize');
+import db from '../sequelize/models/index.js';
+import { Op } from 'sequelize';
+
+const { Trail, STO, Session } = db;
 
 // Get all trails
 router.get('/', async (req, res) => {
@@ -129,4 +131,4 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

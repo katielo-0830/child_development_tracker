@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const db = require('../sequelize/models');
+import db from '../sequelize/models/index.js';
 
 /**
  * @route   GET /api/sessions
@@ -141,4 +141,4 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

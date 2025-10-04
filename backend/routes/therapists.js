@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const db = require('../sequelize/models'); // Adjust path if your models are elsewhere relative to this file
+import db from '../sequelize/models/index.js';
 
 /**
  * @route   POST /api/therapists
@@ -85,4 +85,4 @@ router.get('/:id', async (req, res) => {
 // For example:
 // router.put('/:id', async (req, res) => { ... }); // Update therapist by ID
 
-module.exports = router;
+export default router;

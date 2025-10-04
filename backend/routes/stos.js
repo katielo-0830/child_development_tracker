@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const db = require('../sequelize/models'); // Import Sequelize models
+import db from '../sequelize/models/index.js';
 
 /**
  * @route   GET /api/stos
@@ -116,4 +116,4 @@ router.post('/', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

@@ -1,12 +1,12 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 // Import route modules
-const programsRouter = require('./programs');
-const sessionsRouter = require('./sessions');
-const therapistsRouter = require('./therapists');
-const stosRouter = require('./stos');
-const trailsRouter = require('./trails');
+import programsRouter from './programs.js';
+import sessionsRouter from './sessions.js';
+import therapistsRouter from './therapists.js';
+import stosRouter from './stos.js';
+import trailsRouter from './trails.js';
 
 // API routes
 router.use('/api/programs', programsRouter);
@@ -34,4 +34,4 @@ router.get('/', (req, res) => {
   });
 });
 
-module.exports = router;
+export default router;
